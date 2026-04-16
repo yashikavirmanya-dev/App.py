@@ -2,10 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.title("📊 LinkedIn Analytics Dashboard")
+st.title("📊 Carpl LinkedIn Analytics Dashboard")
 
-# Upload file
-file = st.file_uploader("Upload your LinkedIn Analytics CSV", type=["csv"])
+# -------------------------------
+# FILE 1: LINKEDIN ANALYTICS (UNCHANGED)
+# -------------------------------
+file = st.file_uploader("Upload your LinkedIn Analytics CSV", type=["csv"], key="linkedin")
 
 if file:
     df = pd.read_csv(file)
@@ -47,7 +49,6 @@ if file:
     st.metric(label=f"Total {metric}", value=total_value)
 
     # ---- Quarterly Approximation ----
-    # Group months manually into quarters
     def get_quarter(month):
         if "Jan" in month or "Feb" in month or "Mar" in month:
             return "Q1"
@@ -69,4 +70,56 @@ if file:
     st.plotly_chart(fig2)
 
 else:
-    st.warning("Upload your file to generate dashboard")
+    st.warning("Upload your LinkedIn file to generate dashboard")
+
+# -------------------------------
+# FILE 2: Relevant Followers DASHBOARD (NEW ADDITION)
+# -------------------------------
+
+st.header("📂 Relevant Category Dashboard")
+
+file2 = st.file_uploader("Upload your Followers CSV", type=["csv"], key="Followers")
+
+if file2:
+    df2 = pd.read_csv(file2)
+    df2.columns = df2.columns.str.strip()
+
+    st.subheader("📌 Linkedin Followers Data")
+    st.dataframe(df2)
+
+    # 👉 Adjust based on your file (these should match your Followers CSV)
+    category_col = "Category"
+    name_col = "Full Name"
+    title_col = "Title"
+
+    # ---- CATEGORY DISTRIBUTION ----
+    category_count = df2[category_col].value_counts().reset_index()
+    category_count.columns = [category_col, "Count"]
+
+    st.subheader("📊 Category-wise Distribution")
+
+    fig3 = px.bar(
+        category_count,
+        x=category_col,
+        y="Count",
+        title="Followers Count by Category"
+    )
+    st.plotly_chart(fig3)
+
+    # ---- DRILL DOWN ----
+    st.subheader("🔍 Drill Down by Category")
+
+    selected_category = st.selectbox(
+        "Select Category",
+        category_count[category_col].unique(),
+        key="category_select"
+    )
+
+    filtered_Followers = df2[df2[category_col] == selected_category]
+
+    st.write(f"### Followers in {selected_category}")
+
+    st.dataframe(filtered_Followers[[name_col, title_col]])
+
+else:
+    st.info("Upload your Followers file to see category analysis")
